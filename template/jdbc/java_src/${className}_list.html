@@ -1,0 +1,303 @@
+ <#assign className = table.className> <#assign classNameLower =
+className?uncap_first>
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="jquery,ui,easy,easyui,web">
+<meta name="description"
+	content="easyui help you build your web page easily!">
+<title>XX管理</title>
+
+<link rel="stylesheet" type="text/css"
+	href="js/easyUI/themes/default/easyui.css">
+<!--  -->
+<link rel="stylesheet" type="text/css" href="js/easyUI/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="js/easyUI/demo/demo.css">
+<script type="text/javascript" src="js/easyUI/jquery.min.js"></script>
+<script type="text/javascript" src="js/easyUI/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+	src="js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+
+<script type="text/javascript">
+	//var url;
+	var mesTitle;
+	function add${className}() {
+		$('#dlg').dialog('open').dialog('setTitle', '新增xx');
+		$('#fm').form('clear');
+		url = path + "/user/addUser";
+		mesTitle = '创建用户成功';
+	}
+
+	function save${className}() {
+
+		$('#fm').form('submit', {
+			url : "${classNameLower}.do?action=add${classNameLower}",
+			onSubmit : function() {
+				return $(this).form('validate');
+			},
+			success : function(result) {
+
+				var result = eval('(' + result + ')');
+				if (result.success) {
+					$('#dlg').dialog('close');
+					$('#datagrid').datagrid('reload');
+				} else {
+					mesTitle = '创建用户失败';
+				}
+				$.messager.show({
+					title : mesTitle,
+					msg : result.msg
+				});
+			}
+		});
+	}
+	
+	function delete${className}() {
+
+		var ids = [];
+		var rows = $('#datagrid').datagrid('getSelections');
+		for (var i = 0; i < rows.length; i++) {
+		<#list
+					table.columns as column> <#if column_index==0>
+			ids.push(rows[i].${column.columnName?uncap_first});
+				</#if></#list>
+		}
+		if (ids.length == 0) {
+			alert("请选择一行");
+			return false;
+
+		}
+
+		$.messager.confirm('提示', '您确定要删除吗？', function(r) {
+			if (r) {
+				$('#menu_authf').form('submit', {
+				<#list
+					table.columns as column> <#if column_index==0>
+					url : "${classNameLower}.do?action=remove${className}&${column.columnName?uncap_first}=" + ids.join(","),
+					</#if></#list>
+					onSubmit : function() {
+						return $(this).form('validate');
+					},
+					success : function(result) {
+						/* console.info(result); */
+						var result = eval('(' + result + ')');
+						if (result.success) {
+							$('#dlg').dialog('close');
+							$('#datagrid').datagrid('reload');
+						} else {
+							mesTitle = '新增用户失败';
+						}
+						$.messager.show({
+							title : mesTitle,
+							msg : result.msg
+						});
+					}
+				});
+			}
+		});
+
+	}
+	
+	
+
+	function doSearch() {
+
+		$('#datagrid').datagrid('load', {
+		<#list
+					table.columns as column> 
+					<#if column_index!=0>
+			${column.columnName?lower_case} : $('#query_${column.columnName}').val(),
+			
+			</#if>
+			</#list>
+		
+		});
+	}
+	
+	//编辑初始化
+	function edit${className}() {
+		var rows = $('#datagrid').datagrid('getSelections');
+
+		if (rows.length != 1) {
+			$.messager.alert('提示', '请一个要编辑的记录！', 'error');
+			return false;
+		}
+
+		//	var row = $('#datagrid').datagrid('getSelected');
+		var queryauth_id = rows[0].auth_id;
+<#list
+					table.columns as column> <#if column_index==0>
+		$('#update${column.columnName?uncap_first}').val(queryauth_id);
+		</#if></#list>
+		$('#updatedlg').dialog('open').dialog('setTitle', '编辑用户');
+		$('#updatefm').form('load', rows[0]);//这句话有问题，第一次加载时正确的，第二次就出错了，还保持第一次的数据
+
+		mesTitle = '更新角色成功';
+
+	}
+	
+	function update${className}() {
+
+		$('#updatefm').form('submit', {
+
+			url : "${classNameLower}.do?action=update${classNameLower}",
+			onSubmit : function() {
+				return $(this).form('validate');
+			},
+			success : function(result) {
+				/* console.info(result); */
+				var result = eval('(' + result + ')');
+				if (result.success) {
+					$('#dlg').dialog('close');
+					$('#datagrid').datagrid('reload');
+				} else {
+					mesTitle = '创建角色失败';
+				}
+				$.messager.show({
+					title : mesTitle,
+					msg : result.msg
+				});
+			}
+		});
+	}
+	
+	
+</script>
+</head>
+
+
+
+
+<body class="easyui-layout" fit="true">
+
+	<div region="center" border="false" style="overflow: auto;">
+		<!-- 用户信息列表 -->
+
+
+		<div>
+
+			<#list table.columns as column> <#if column_index!=0> <span>${column.columnAlias}</span>
+			<input id="query_${column.columnName}" class="easyui-textbox">
+
+			</#if> </#list> <a href="#" class="easyui-linkbutton"
+				data-options="iconCls:'icon-search'" onclick="doSearch()"
+				style="width:80px">搜索</a>
+		</div>
+
+
+
+		<table class="easyui-datagrid" title="用XX列表" id="datagrid"
+			style="width:100%;height:90%" fit="false" pagination="true"
+			toolbar="#toolbar"
+			data-options="rownumbers:true  ,collapsible:true,url:'${classNameLower}.do?action=get${className}_List',method:'post'"
+			pagination="true">
+			<thead>
+
+				<tr height="250px">
+					<#list table.columns as column> <#if column_index==0>
+					<th
+						data-options="field:'${column.columnName?uncap_first}',checkbox:true"></th>
+					</#if> <#if column_index!=0>
+
+					<th
+						data-options="field:'${column.columnName?uncap_first}',width:100">${column.columnAlias}</th></#if>
+
+					</#list>
+
+				</tr>
+			</thead>
+		</table>
+
+
+		<!-- 按钮 -->
+		<div id="toolbar">
+			<a href="javascript:void(0);" class="easyui-linkbutton"
+				iconCls="icon-add" plain="true" onclick="add${className}();">新增</a>
+			<a href="javascript:void(0);" class="easyui-linkbutton"
+				iconCls="icon-remove" plain="true" onclick="edit${className}();">编辑</a>
+			<a href="javascript:void(0);" class="easyui-linkbutton"
+				iconCls="icon-remove" plain="true" onclick="delete${className}();">删除</a>
+		</div>
+
+		<!-- 对话框 -->
+		<div id="dlg" class="easyui-dialog"
+			style="width:400px;height:280px;padding:10px 20px" closed="true"
+			buttons="#dlg-buttons">
+			<div class="ftitle">新增</div>
+			<form id="fm" method="post" novalidate>
+
+
+				<#list table.columns as column> <#if column_index!=0>
+				<div class="fitem">
+					<label>${column.columnAlias?uncap_first}:</label> <input
+						name="${column.columnName?uncap_first}" class="easyui-textbox"
+						required="true">
+				</div>
+				</#if> </#list>
+
+
+			</form>
+		</div>
+		<!-- 更新对话框 -->
+
+		<div id="updatedlg" class="easyui-dialog"
+			style="width:400px;height:280px;padding:10px 20px" closed="true"
+			buttons="#update-buttons">
+			<div class="ftitle">编辑</div>
+			<form id="updatefm" method="post" novalidate>
+
+
+				<#list table.columns as column> <#if column_index==0> <input
+					type="hidden" name="${column.columnName?uncap_first}"
+					id="update${column.columnName?uncap_first}"> </#if> <#if
+				column_index!=0>
+				<div class="fitem">
+					<label>${column.columnAlias?uncap_first}:</label> <input
+						name="${column.columnName?uncap_first}" class="easyui-textbox"
+						required="true">
+				</div>
+				</#if> </#list>
+
+
+			</form>
+		</div>
+
+		<div class="easyui-dialog"
+			style="width:400px;height:280px;padding:10px 20px" closed="true">
+			<div class="ftitle">编辑</div>
+			<form id="menu_authf" method="post" novalidate></form>
+		</div>
+
+
+
+
+		<!-- 对话框按钮 -->
+		<div id="dlg-buttons">
+			<a href="javascript:void(0)" class="easyui-linkbutton c6"
+				iconCls="icon-ok" onclick="save${className}()" style="width:90px">创建</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton"
+				iconCls="icon-cancel"
+				onclick="javascript:$('#role_user').dialog('close')"
+				style="width:90px">取消</a>
+		</div>
+
+		<!-- 对话框按钮 -->
+		<div id="update-buttons">
+			<a href="javascript:void(0)" class="easyui-linkbutton c6"
+				iconCls="icon-ok" onclick="update${className}()" style="width:90px">更新</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton"
+				iconCls="icon-cancel"
+				onclick="javascript:$('#role_user').dialog('close')"
+				style="width:90px">取消</a>
+		</div>
+
+
+
+
+
+	</div>
+
+
+</body>
+</html>

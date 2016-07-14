@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="jquery,ui,easy,easyui,web">
+<meta name="description"
+	content="easyui help you build your web page easily!">
+<title>XX管理</title>
+
+<link rel="stylesheet" type="text/css"
+	href="js/easyUI/themes/default/easyui.css">
+<!--  -->
+<link rel="stylesheet" type="text/css" href="js/easyUI/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="js/easyUI/demo/demo.css">
+<script type="text/javascript" src="js/easyUI/jquery.min.js"></script>
+<script type="text/javascript" src="js/easyUI/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+	src="js/easyUI/locale/easyui-lang-zh_CN.js"></script>
+
+<script type="text/javascript">
+	//var url;
+	var mesTitle;
+	function addProduct() {
+		$('#dlg').dialog('open').dialog('setTitle', '新增xx');
+		$('#fm').form('clear');
+		url = path + "/user/addUser";
+		mesTitle = '创建用户成功';
+	}
+
+	function saveProduct() {
+
+		$('#fm').form('submit', {
+			url : "product.do?action=addproduct",
+			onSubmit : function() {
+				return $(this).form('validate');
+			},
+			success : function(result) {
+
+				var result = eval('(' + result + ')');
+				if (result.success) {
+					$('#dlg').dialog('close');
+					$('#datagrid').datagrid('reload');
+				} else {
+					mesTitle = '创建用户失败';
+				}
+				$.messager.show({
+					title : mesTitle,
+					msg : result.msg
+				});
+			}
+		});
+	}
+	
+	function deleteProduct() {
+
+		var ids = [];
+		var rows = $('#datagrid').datagrid('getSelections');
+		for (var i = 0; i < rows.length; i++) {
+ 
+			ids.push(rows[i].productId);
+     		}
+		if (ids.length == 0) {
+			alert("请选择一行");
+			return false;
+
+		}
+
+		$.messager.confirm('提示', '您确定要删除吗？', function(r) {
+			if (r) {
+				$('#menu_authf').form('submit', {
+ 
+					url : "product.do?action=removeProduct&productId=" + ids.join(","),
+     					onSubmit : function() {
+						return $(this).form('validate');
+					},
+					success : function(result) {
+						/* console.info(result); */
+						var result = eval('(' + result + ')');
+						if (result.success) {
+							$('#dlg').dialog('close');
+							$('#datagrid').datagrid('reload');
+						} else {
+							mesTitle = '新增用户失败';
+						}
+						$.messager.show({
+							title : mesTitle,
+							msg : result.msg
+						});
+					}
+				});
+			}
+		});
+
+	}
+	
+	
+
+	function doSearch() {
+
+		$('#datagrid').datagrid('load', {
+			name : $('#query_Name').val(),
+			
+			price : $('#query_Price').val(),
+			
+			suppilerid : $('#query_SuppilerId').val(),
+			
+			createdate : $('#query_CreateDate').val(),
+			
+			remark : $('#query_Remark').val(),
+			
+		
+		});
+	}
+	
+	//编辑初始化
+	function editProduct() {
+		var rows = $('#datagrid').datagrid('getSelections');
+
+		if (rows.length != 1) {
+			$.messager.alert('提示', '请一个要编辑的记录！', 'error');
+			return false;
+		}
+
+		//	var row = $('#datagrid').datagrid('getSelected');
+		var queryauth_id = rows[0].auth_id;
+ 
+		$('#updateproductId').val(queryauth_id);
+     		$('#updatedlg').dialog('open').dialog('setTitle', '编辑用户');
+		$('#updatefm').form('load', rows[0]);//这句话有问题，第一次加载时正确的，第二次就出错了，还保持第一次的数据
+
+		mesTitle = '更新角色成功';
+
+	}
+	
+	function updateProduct() {
+
+		$('#updatefm').form('submit', {
+
+			url : "product.do?action=updateproduct",
+			onSubmit : function() {
+				return $(this).form('validate');
+			},
+			success : function(result) {
+				/* console.info(result); */
+				var result = eval('(' + result + ')');
+				if (result.success) {
+					$('#dlg').dialog('close');
+					$('#datagrid').datagrid('reload');
+				} else {
+					mesTitle = '创建角色失败';
+				}
+				$.messager.show({
+					title : mesTitle,
+					msg : result.msg
+				});
+			}
+		});
+	}
+	
+	
+</script>
+</head>
+
+
+
+
+<body class="easyui-layout" fit="true">
+
+	<div region="center" border="false" style="overflow: auto;">
+		<!-- 用户信息列表 -->
+
+
+		<div>
+
+			    <span>车辆名称</span>
+			<input id="query_Name" class="easyui-textbox">
+
+			   <span>价格</span>
+			<input id="query_Price" class="easyui-textbox">
+
+			   <span>suppilerId</span>
+			<input id="query_SuppilerId" class="easyui-textbox">
+
+			   <span>createDate</span>
+			<input id="query_CreateDate" class="easyui-textbox">
+
+			   <span>备注</span>
+			<input id="query_Remark" class="easyui-textbox">
+
+			  <a href="#" class="easyui-linkbutton"
+				data-options="iconCls:'icon-search'" onclick="doSearch()"
+				style="width:80px">搜索</a>
+		</div>
+
+
+
+		<table class="easyui-datagrid" title="用XX列表" id="datagrid"
+			style="width:100%;height:90%" fit="false" pagination="true"
+			toolbar="#toolbar"
+			data-options="rownumbers:true  ,collapsible:true,url:'product.do?action=getProduct_List',method:'post'"
+			pagination="true">
+			<thead>
+
+				<tr height="250px">
+					 
+					<th
+						data-options="field:'productId',checkbox:true"></th>
+					 
+
+  
+
+					<th
+						data-options="field:'name',width:100">车辆名称</th>
+
+  
+
+					<th
+						data-options="field:'price',width:100">价格</th>
+
+  
+
+					<th
+						data-options="field:'suppilerId',width:100">suppilerId</th>
+
+  
+
+					<th
+						data-options="field:'createDate',width:100">createDate</th>
+
+  
+
+					<th
+						data-options="field:'remark',width:100">备注</th>
+
+
+				</tr>
+			</thead>
+		</table>
+
+
+		<!-- 按钮 -->
+		<div id="toolbar">
+			<a href="javascript:void(0);" class="easyui-linkbutton"
+				iconCls="icon-add" plain="true" onclick="addProduct();">新增</a>
+			<a href="javascript:void(0);" class="easyui-linkbutton"
+				iconCls="icon-remove" plain="true" onclick="editProduct();">编辑</a>
+			<a href="javascript:void(0);" class="easyui-linkbutton"
+				iconCls="icon-remove" plain="true" onclick="deleteProduct();">删除</a>
+		</div>
+
+		<!-- 对话框 -->
+		<div id="dlg" class="easyui-dialog"
+			style="width:400px;height:280px;padding:10px 20px" closed="true"
+			buttons="#dlg-buttons">
+			<div class="ftitle">新增</div>
+			<form id="fm" method="post" novalidate>
+
+
+				   
+				<div class="fitem">
+					<label>车辆名称:</label> <input
+						name="name" class="easyui-textbox"
+						required="true">
+				</div>
+				  
+				<div class="fitem">
+					<label>价格:</label> <input
+						name="price" class="easyui-textbox"
+						required="true">
+				</div>
+				  
+				<div class="fitem">
+					<label>suppilerId:</label> <input
+						name="suppilerId" class="easyui-textbox"
+						required="true">
+				</div>
+				  
+				<div class="fitem">
+					<label>createDate:</label> <input
+						name="createDate" class="easyui-textbox"
+						required="true">
+				</div>
+				  
+				<div class="fitem">
+					<label>备注:</label> <input
+						name="remark" class="easyui-textbox"
+						required="true">
+				</div>
+				 
+
+
+			</form>
+		</div>
+		<!-- 更新对话框 -->
+
+		<div id="updatedlg" class="easyui-dialog"
+			style="width:400px;height:280px;padding:10px 20px" closed="true"
+			buttons="#update-buttons">
+			<div class="ftitle">编辑</div>
+			<form id="updatefm" method="post" novalidate>
+
+
+				  <input
+					type="hidden" name="productId"
+					id="updateproductId">     				<div class="fitem">
+					<label>车辆名称:</label> <input
+						name="name" class="easyui-textbox"
+						required="true">
+				</div>
+				   				<div class="fitem">
+					<label>价格:</label> <input
+						name="price" class="easyui-textbox"
+						required="true">
+				</div>
+				   				<div class="fitem">
+					<label>suppilerId:</label> <input
+						name="suppilerId" class="easyui-textbox"
+						required="true">
+				</div>
+				   				<div class="fitem">
+					<label>createDate:</label> <input
+						name="createDate" class="easyui-textbox"
+						required="true">
+				</div>
+				   				<div class="fitem">
+					<label>备注:</label> <input
+						name="remark" class="easyui-textbox"
+						required="true">
+				</div>
+				 
+
+
+			</form>
+		</div>
+
+		<div class="easyui-dialog"
+			style="width:400px;height:280px;padding:10px 20px" closed="true">
+			<div class="ftitle">编辑</div>
+			<form id="menu_authf" method="post" novalidate></form>
+		</div>
+
+
+
+
+		<!-- 对话框按钮 -->
+		<div id="dlg-buttons">
+			<a href="javascript:void(0)" class="easyui-linkbutton c6"
+				iconCls="icon-ok" onclick="saveProduct()" style="width:90px">创建</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton"
+				iconCls="icon-cancel"
+				onclick="javascript:$('#role_user').dialog('close')"
+				style="width:90px">取消</a>
+		</div>
+
+		<!-- 对话框按钮 -->
+		<div id="update-buttons">
+			<a href="javascript:void(0)" class="easyui-linkbutton c6"
+				iconCls="icon-ok" onclick="updateProduct()" style="width:90px">更新</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton"
+				iconCls="icon-cancel"
+				onclick="javascript:$('#role_user').dialog('close')"
+				style="width:90px">取消</a>
+		</div>
+
+
+
+
+
+	</div>
+
+
+</body>
+</html>
